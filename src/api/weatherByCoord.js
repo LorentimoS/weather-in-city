@@ -1,10 +1,10 @@
 class weatherByCoord{
 
-    constructor(latitude, longitude) {
+    constructor(longitude, latitude) {
       this.cityWeather = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,rain`;
     }
 
-  info(){
+  weather(){
     return fetch(this.cityWeather)
             .then(response=>response.json());
   }

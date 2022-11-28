@@ -536,49 +536,149 @@ var _cityCoord = require("./api/cityCoord");
 var _weatherByCoord = require("./api/weatherByCoord");
 var _d3 = require("d3");
 var _geoJson = require("./geo.json");
+const cityForm = document.getElementById("cityForm");
+cityForm.addEventListener("submit", (event)=>{
+    event.preventDefault();
+    const cityName = cityForm.elements[0].value;
+    const chartTemp = cityForm.elements[1].checked;
+    const chartRain = cityForm.elements[2].checked;
+    renderCity("#countryMap", cityName, chartTemp, chartRain);
+});
 document.addEventListener("DOMContentLoaded", setup);
 function setup() {
-    const city = new (0, _cityCoord.cityCoord)("Moscow");
-    city.info().then((infoArray)=>{
-        console.log(infoArray[0].lon);
-        renderMap("#map", [
-            infoArray[0].lon,
-            infoArray[0].lat
-        ]);
-    });
+    renderChart("#chart");
+    renderMap("#map");
 }
-function renderLaunchpads(launchpads, container) {
-    const list = document.createElement("ul");
-    const items = [];
-    launchpads.forEach((launchpad)=>{
-        const listItem = document.createElement("li");
-        listItem.innerHTML = launchpad.name + " " + launchpad.region;
-        listItem.id = launchpad.id;
-        items.push(listItem);
-    });
-    list.append(...items);
-    container.replaceChildren(list);
-}
-function renderMap(containerSelector, cityCoord) {
-    const width = 1000;
-    const height = 600;
+function renderChart(containerSelector) {
+    const width = 600;
+    const height = 300;
     const margin = {
         top: 20,
         right: 20,
         bottom: 20,
-        left: 100
+        left: 120
     };
-    const svg = _d3.select(containerSelector).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("id", "countryMap").attr("transform", `translate(${margin.left},${margin.top})`);
+    const svg = _d3.select(containerSelector).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).attr("id", "chartSVG").append("g").attr("transform", `translate(${margin.left},${margin.top})`).attr("id", "svgChart");
+}
+function renderMap(containerSelector) {
+    const width = 700;
+    const height = 550;
+    const margin = {
+        top: 20,
+        right: 20,
+        bottom: 20,
+        left: 50
+    };
+    const svg = _d3.select(containerSelector).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
     const projection = _d3.geoMercator().scale(90).center([
         0,
         20
-    ]).translate([
-        width / 2 - margin.left,
-        height / 2 - margin.top
     ]);
-    svg.append("g").selectAll("path").data(_geoJson.features).enter().append("path").attr("class", "topo").attr("d", _d3.geoPath().projection(projection)).style("opacity", .7);
-    const coord = projection(cityCoord);
-    svg.append("circle").attr("cx", coord[0]).attr("cy", coord[1]).attr("r", 4).style("fill", "red");
+    svg.append("g").attr("id", "countryMap").selectAll("path").data(_geoJson.features).enter().append("path").attr("class", "topo").attr("d", _d3.geoPath().projection(projection)).style("opacity", .7);
+}
+function renderCity(containerSelector, cityName, checkTemp, checkRain) {
+    const svg = _d3.select(containerSelector);
+    const city = new (0, _cityCoord.cityCoord)(cityName);
+    city.info().then((infoArray)=>{
+        if (infoArray.length == 0) alert("Input the real name of city");
+        else {
+            const projection = _d3.geoMercator().scale(90).center([
+                0,
+                20
+            ]);
+            const coord = projection([
+                infoArray[0].lon,
+                infoArray[0].lat
+            ]);
+            const circle = document.getElementById("circleCity");
+            if (circle) circle.remove();
+            svg.append("circle").attr("cx", coord[0]).attr("cy", coord[1]).attr("r", 2).attr("id", "circleCity").style("fill", "red");
+            renderWeather(infoArray[0].lon, infoArray[0].lat, checkTemp, checkRain);
+        }
+    });
+}
+function renderWeather(longitude, latitude, checkTemp, checkRain) {
+    const width = document.getElementById("chartSVG").getAttribute("width") - 120 - 20;
+    const height = document.getElementById("chartSVG").getAttribute("height") - 20 - 20;
+    const svg = _d3.select("#svgChart");
+    const cityWeather = new (0, _weatherByCoord.weatherByCoord)(longitude, latitude);
+    cityWeather.weather().then((weatherArray)=>{
+        const time = weatherArray.hourly.time;
+        const temp = weatherArray.hourly.temperature_2m;
+        const rain = weatherArray.hourly.rain;
+        const arrWeatherData = [];
+        for(let i = 0; i < time.length; i++)arrWeatherData.push([
+            time[i],
+            temp[i],
+            rain[i]
+        ]);
+        const weatherData = arrWeatherData.map(function(d) {
+            return {
+                date: _d3.timeParse("%Y-%m-%dT%I:%M")(d[0]),
+                degree: d[1],
+                rain: d[2]
+            };
+        });
+        removeElement("axisTime");
+        removeElement("currTime");
+        const xTime = _d3.scaleTime().domain(_d3.extent(weatherData, function(d) {
+            return d.date;
+        })).range([
+            0,
+            width
+        ]);
+        svg.append("g").attr("transform", `translate(0,${height})`).attr("id", "axisTime").call(_d3.axisBottom(xTime));
+        const currTime = new Date();
+        svg.append("line").style("stroke", "red").attr("id", "currTime").attr("x1", xTime(currTime)).attr("y1", 0).attr("x2", xTime(currTime)).attr("y2", height);
+        removeElement("axisTemp");
+        removeElement("labelTemp");
+        removeElement("pathTemp");
+        if (checkTemp) {
+            const yDegree = _d3.scaleLinear().domain([
+                _d3.min(weatherData, function(d) {
+                    return d.degree;
+                }) * 0.95,
+                _d3.max(weatherData, function(d) {
+                    return d.degree;
+                }) * 1.1
+            ]).range([
+                height,
+                0
+            ]);
+            svg.append("g").attr("id", "axisTemp").call(_d3.axisLeft(yDegree).tickSize(-width).ticks(6));
+            svg.append("text").attr("id", "labelTemp").attr("text-anchor", "end").attr("transform", "rotate(-90)").attr("y", -30).attr("x", -height / 2).text(weatherArray.hourly_units.temperature_2m);
+            svg.append("path").datum(weatherData).attr("fill", "none").attr("stroke", "steelblue").attr("stroke-width", 1.5).attr("id", "pathTemp").attr("d", _d3.line().x(function(d) {
+                return xTime(d.date);
+            }).y(function(d) {
+                return yDegree(d.degree);
+            }));
+        }
+        removeElement("axisRain");
+        removeElement("labelRain");
+        removeElement("pathRain");
+        if (checkRain) {
+            const yRain = _d3.scaleLinear().domain([
+                0,
+                _d3.max(weatherData, function(d) {
+                    return d.rain;
+                })
+            ]).range([
+                height,
+                0
+            ]);
+            svg.append("g").attr("transform", `translate(${-60 * checkTemp},0)`).attr("id", "axisRain").call(_d3.axisLeft(yRain).tickSize(-width * !checkTemp).ticks(6));
+            svg.append("text").attr("id", "labelRain").attr("text-anchor", "end").attr("transform", "rotate(-90)").attr("y", -30 - 60 * checkTemp).attr("x", -height / 2).text(weatherArray.hourly_units.rain);
+            svg.append("path").datum(weatherData).attr("fill", "none").attr("stroke", "gray").attr("stroke-width", 1.5).attr("id", "pathRain").attr("d", _d3.line().x(function(d) {
+                return xTime(d.date);
+            }).y(function(d) {
+                return yRain(d.rain);
+            }));
+        }
+    });
+}
+function removeElement(idElem) {
+    const Elem = document.getElementById(idElem);
+    if (Elem) Elem.remove();
 }
 
 },{"./api/cityCoord":"2CT0S","./api/weatherByCoord":"cCyIg","d3":"17XFv","./geo.json":"8A6wv"}],"2CT0S":[function(require,module,exports) {
@@ -629,10 +729,10 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "weatherByCoord", ()=>weatherByCoord);
 class weatherByCoord {
-    constructor(latitude, longitude){
+    constructor(longitude, latitude){
         this.cityWeather = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,rain`;
     }
-    info() {
+    weather() {
         return fetch(this.cityWeather).then((response)=>response.json());
     }
 }
