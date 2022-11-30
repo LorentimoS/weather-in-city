@@ -536,6 +536,7 @@ var _cityCoord = require("./api/cityCoord");
 var _weatherByCoord = require("./api/weatherByCoord");
 var _d3 = require("d3");
 var _geoJson = require("./geo.json");
+let projection;
 const cityForm = document.getElementById("cityForm");
 cityForm.addEventListener("submit", (event)=>{
     event.preventDefault();
@@ -561,7 +562,7 @@ function renderChart(containerSelector) {
     const svg = _d3.select(containerSelector).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).attr("id", "chartSVG").append("g").attr("transform", `translate(${margin.left},${margin.top})`).attr("id", "svgChart");
 }
 function renderMap(containerSelector) {
-    const width = 700;
+    const width = 600;
     const height = 550;
     const margin = {
         top: 20,
@@ -570,9 +571,12 @@ function renderMap(containerSelector) {
         left: 50
     };
     const svg = _d3.select(containerSelector).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-    const projection = _d3.geoMercator().scale(90).center([
+    projection = _d3.geoMercator().scale(90).center([
         0,
         20
+    ]).translate([
+        width / 2 - margin.left,
+        height / 2 - margin.top
     ]);
     svg.append("g").attr("id", "countryMap").selectAll("path").data(_geoJson.features).enter().append("path").attr("class", "topo").attr("d", _d3.geoPath().projection(projection)).style("opacity", .7);
 }
@@ -582,10 +586,6 @@ function renderCity(containerSelector, cityName, checkTemp, checkRain) {
     city.info().then((infoArray)=>{
         if (infoArray.length == 0) alert("Input the real name of city");
         else {
-            const projection = _d3.geoMercator().scale(90).center([
-                0,
-                20
-            ]);
             const coord = projection([
                 infoArray[0].lon,
                 infoArray[0].lat
@@ -637,10 +637,10 @@ function renderWeather(longitude, latitude, checkTemp, checkRain) {
             const yDegree = _d3.scaleLinear().domain([
                 _d3.min(weatherData, function(d) {
                     return d.degree;
-                }) * 0.95,
+                }) - 0.5,
                 _d3.max(weatherData, function(d) {
                     return d.degree;
-                }) * 1.1
+                }) + 0.5
             ]).range([
                 height,
                 0
@@ -661,7 +661,7 @@ function renderWeather(longitude, latitude, checkTemp, checkRain) {
                 0,
                 _d3.max(weatherData, function(d) {
                     return d.rain;
-                })
+                }) + 0.1
             ]).range([
                 height,
                 0

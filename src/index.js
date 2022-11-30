@@ -3,6 +3,7 @@ import { weatherByCoord } from "./api/weatherByCoord";
 import * as d3 from "d3"
 import * as Geo from "./geo.json"
 
+let projection;
 const cityForm = document.getElementById('cityForm');
 cityForm.addEventListener('submit', event => {
   event.preventDefault();
@@ -39,7 +40,7 @@ function renderChart(containerSelector) {
 }
 
 function renderMap(containerSelector) {
-  const width = 700;
+  const width = 600;
   const height = 550;
   const margin = {
     top: 20,
@@ -52,9 +53,10 @@ function renderMap(containerSelector) {
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`)
-  const projection = d3.geoMercator()
+  projection = d3.geoMercator()
     .scale(90)
     .center([0, 20])
+    .translate([width/2 - margin.left, height/2 - margin.top]);
   svg.append("g")
     .attr("id", "countryMap")
     .selectAll("path")
@@ -75,9 +77,6 @@ function renderCity(containerSelector, cityName, checkTemp, checkRain) {
       alert("Input the real name of city")
     }
     else {
-      const projection = d3.geoMercator()
-        .scale(90)
-        .center([0, 20])
       const coord = projection([infoArray[0].lon, infoArray[0].lat]);
 
       const circle = document.getElementById("circleCity");
@@ -145,8 +144,8 @@ function renderWeather(longitude, latitude, checkTemp, checkRain) {
     removeElement("pathTemp")
     if (checkTemp) {
       const yDegree = d3.scaleLinear()
-        .domain([d3.min(weatherData, function(d) { return d.degree; })*0.95,
-        d3.max(weatherData, function(d) { return d.degree; })*1.1])
+        .domain([d3.min(weatherData, function(d) { return d.degree; })-0.5,
+        d3.max(weatherData, function(d) { return d.degree; })+0.5])
         .range([height, 0]);
       svg.append("g")
         .attr("id", "axisTemp")
@@ -176,7 +175,7 @@ function renderWeather(longitude, latitude, checkTemp, checkRain) {
     removeElement("pathRain")
     if (checkRain) {
       const yRain = d3.scaleLinear()
-        .domain([0, d3.max(weatherData, function(d) { return d.rain; })])
+        .domain([0, d3.max(weatherData, function(d) { return d.rain; })+0.1])
         .range([height, 0]);
       svg.append("g")
         .attr("transform", `translate(${-60 * checkTemp},0)`)
