@@ -6,6 +6,6 @@ document.addEventListener("DOMContentLoaded", setup)
 
 function setup(){
   const root = ReactDOM.createRoot(document.getElementById('app'));
-  const element = <App txt = 'friend'/>;
+  const element = <App />;
   root.render(element);
 }

@@ -1,7 +1,11 @@
+import {Map} from "./Map"
+
 function App(props){
+
+  
   return (
     <main className="main">
-      Hello, {props.txt}!
+      <Map />
     </main>
   )
 }
