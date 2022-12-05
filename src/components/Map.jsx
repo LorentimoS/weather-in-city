@@ -8,13 +8,13 @@ function Map() {
       return;
     }
 
-    const width = 1000;
-    const height = 600;
+    const width = 600;
+    const height = 550;
     const margin = {
       top: 20,
       right: 20,
       bottom: 20,
-      left: 100
+      left: 50
     }
 
     container.innerHTML = '';
@@ -24,10 +24,11 @@ function Map() {
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`)
     const projection = d3.geoMercator()
-      .scale(70)
+      .scale(90)
       .center([0, 20])
       .translate([width / 2 - margin.left, height / 2 - margin.top]);
     svg.append("g")
+      .attr("id", "countryMap")
       .selectAll("path")
       .data(Geo.features)
       .enter()
@@ -43,7 +44,7 @@ function Map() {
 
   
   return (
-    <div ref={mapRef} className="mapContainer map">
+    <div ref={mapRef} className="mapContainer">
     </div >
   )
 }
