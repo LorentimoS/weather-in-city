@@ -1,22 +1,22 @@
-import { useState } from 'react'
-
 function Form(props) {
-  const [cityName, setCityName] = useState('')
-  const [checkTemp, setCheckTemp] = useState('')
-  const [checkRain, setCheckRain] = useState('')
-
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    props.onFormSubmit(event.currentTarget.name.value,
+                       event.currentTarget.temp.checked,
+                       event.currentTarget.rain.checked)
+  };
   
   return (
-    <form>
+    <form onSubmit={handleSubmit}>
         <label>
           City name:
-          <input type="text" value={cityName} size="20" onChange = {event => {setCityName(event.target.value);}}/><br />
+          <input id='name' type="text"/><br />
         </label>
         <label>
-          <input type="checkbox" value={checkTemp} onChange = {event => {setCheckTemp(event.target.value);}}/>Temperature<br />
+          <input id='temp' type="checkbox"/>Temperature<br />
         </label>
         <label>
-          <input type="checkbox" value={checkRain} onChange = {event => {setCheckRain(event.target.value);}}/>Rain<br />
+          <input id='rain' type="checkbox"/>Rain<br />
         </label>
         <input type="submit" value="Show!"/>
       </form>
