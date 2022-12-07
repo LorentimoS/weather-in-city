@@ -14,13 +14,8 @@ function App(props) {
 
   const onFormSubmitted = (name, temp, rain) => {
     setCityName(name)
-    if (typeof (temp) === Boolean) {
-      setCheckTemp(temp)
-    }
-    if (typeof (temp) === Boolean) {
-      setCheckRain(rain)
-    }
-
+    setCheckTemp(+temp)
+    setCheckRain(+rain)
   }
 
   useEffect(() => {
@@ -31,7 +26,8 @@ function App(props) {
       })
 
       if (cityInfo.length == 0) {
-        alert("Input the real name of city")
+        //alert("Input the real name of city")
+        console.log("Unreal name of city")
       }
       else {
         console.log(cityName)
@@ -44,6 +40,7 @@ function App(props) {
       <Form onFormSubmit={onFormSubmitted} />
       <Chart />
       <Map />
+      <div>{cityName}+{checkTemp}+{checkRain}</div>
     </main>
   )
 }
