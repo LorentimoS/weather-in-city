@@ -1,4 +1,4 @@
-import {useState, useRef, useEffect} from 'react'
+import { useState, useRef, useEffect } from 'react'
 import * as d3 from 'd3'
 import Geo from '../data/geo.json'
 function Map(props) {
@@ -34,7 +34,7 @@ function Map(props) {
       .attr("class", "topo")
       .attr("d", d3.geoPath().projection(projection))
       .style("opacity", .7)
-    if (props.longitude != 0){
+    if (props.longitude != 0) {
       const coord = projection([props.longitude, props.latitude]);
       svg.append("circle")
         .attr("cx", coord[0])

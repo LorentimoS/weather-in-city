@@ -58,7 +58,7 @@ function App(props) {
         }
         setWeatherData(arrWeatherData)
         setWeatherUnits([weatherArray.hourly_units.temperature_2m,
-        weatherArray.hourly_units.rain])
+                         weatherArray.hourly_units.rain])
       })
     }
   }, [lon])

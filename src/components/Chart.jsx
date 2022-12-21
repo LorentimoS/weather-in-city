@@ -50,8 +50,8 @@ function Chart(props) {
 
       if (props.tempr) {
         const yDegree = d3.scaleLinear()
-          .domain([d3.min(weatherData, function(d) { return d.degree; })-0.5,
-                  d3.max(weatherData, function(d) { return d.degree; })+0.5])
+          .domain([d3.min(weatherData, function(d) { return d.degree; }) - 0.5,
+                   d3.max(weatherData, function(d) { return d.degree; }) + 0.5])
           .range([height, 0]);
         svg.append("g")
           .call(d3.axisLeft(yDegree).tickSize(-width).ticks(6))
@@ -60,7 +60,7 @@ function Chart(props) {
           .attr("text-anchor", "end")
           .attr("transform", "rotate(-90)")
           .attr("y", -30)
-          .attr("x", -height/2)
+          .attr("x", -height / 2)
           .text(props.units[0])
 
         svg.append("path")
@@ -75,7 +75,7 @@ function Chart(props) {
 
       if (props.rain) {
         const yRain = d3.scaleLinear()
-          .domain([0, d3.max(weatherData, function(d) { return d.rain; })+0.1])
+          .domain([0, d3.max(weatherData, function(d) { return d.rain; }) + 0.1])
           .range([height, 0]);
         svg.append("g")
           .attr("transform", `translate(${-60 * props.tempr},0)`)
@@ -84,8 +84,8 @@ function Chart(props) {
         svg.append("text")
           .attr("text-anchor", "end")
           .attr("transform", "rotate(-90)")
-          .attr("y", -30 - 60*props.tempr)
-          .attr("x",  -height/2)
+          .attr("y", -30 - 60 * props.tempr)
+          .attr("x", -height / 2)
           .text(props.units[1])
 
         svg.append("path")
